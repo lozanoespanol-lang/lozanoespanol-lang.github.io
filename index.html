@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Panel Familiar · El Puig</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #f1f5f9;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-light: rgba(226, 232, 240, 0.8);
+      --shadow-soft: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+      --radius-xl: 24px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 50%, #eff6ff 100%);
+      color: var(--text-main);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* CABECERA */
+    .header {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 18px;
+      height: 135px;
+      flex-shrink: 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .clock-card {
+      padding: 18px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .fullscreen-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: #f1f5f9;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      font-size: 16px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .fullscreen-btn:active { transform: scale(0.92); background: #e2e8f0; }
+
+    .clock-time {
+      font-size: 58px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1;
+      background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .clock-date {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-transform: capitalize;
+    }
+
+    /* CLIMA */
+    .weather-card {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .weather-now {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-right: 24px;
+      border-right: 2px solid #f1f5f9;
+      min-width: 240px;
+    }
+
+    .weather-main-icon {
+      font-size: 52px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08));
+    }
+
+    .weather-city {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #3b82f6;
+    }
+
+    .weather-temp-main {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -1px;
+    }
+
+    .weather-desc {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .weather-hours {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      flex: 1;
+    }
+
+    .hour-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-lg);
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .hour-time { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+    .hour-icon { font-size: 22px; margin: 2px 0; }
+    .hour-temp { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .hour-rain { font-size: 11px; font-weight: 700; color: #0284c7; }
+
+    /* CUERPO PRINCIPAL */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .left-col, .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    /* TARJETA DESTACADA: LO PRÓXIMO */
+    .next-card {
+      border-radius: var(--radius-xl);
+      padding: 20px 26px;
+      color: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 12px 24px -6px rgba(37, 99, 235, 0.3);
+      transition: background 0.4s ease;
+      flex-shrink: 0;
+    }
+
+    .next-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .next-label {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      opacity: 0.9;
+    }
+
+    .next-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .next-meta {
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .next-badge {
+      background: rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 12px 18px;
+      border-radius: var(--radius-lg);
+      font-size: 17px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    /* ENCABEZADOS DE SECCIÓN */
+    .section-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+      transition: transform 0.15s ease, background 0.2s;
+    }
+    .btn-primary:active { transform: scale(0.96); }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-md);
+      padding: 9px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary.active {
+      background: #e11d48;
+      color: #ffffff;
+      border-color: #e11d48;
+    }
+
+    /* COLUMNAS DE FAMILIA */
+    .family-cols {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .person-col {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .person-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .person-Identity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .person-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+
+    .person-name {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .person-count {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .task-item {
+      padding: 12px 14px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.2s;
+      border: 1px solid rgba(0,0,0,0.04);
+      position: relative;
+    }
+    .task-item:active { transform: scale(0.96); }
+
+    .task-time {
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.85;
+    }
+
+    .task-text {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .empty-msg {
+      margin: auto;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* LISTA DE LA COMPRA */
+    .shop-card {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      height: 100%;
+    }
+
+    .shop-badge {
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      overflow-y: auto;
+      padding-right: 4px;
+      align-content: start;
+      flex: 1;
+    }
+
+    .shop-btn {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: var(--radius-lg);
+      padding: 14px 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 58px;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .shop-btn:active { transform: scale(0.95); }
+
+    .shop-btn.active {
+      background: #dcfce7;
+      border-color: #22c55e;
+      color: #15803d;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+    }
+
+    .shop-btn.delete-mode {
+      background: #ffe4e6;
+      border: 2px dashed #f43f5e;
+      color: #be123c;
+    }
+
+    /* MODALES */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .modal {
+      background: #ffffff;
+      border-radius: var(--radius-xl);
+      padding: 26px;
+      width: 100%;
+      max-width: 460px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal h3 {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .input-group input, .input-group select {
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+      color: var(--text-main);
+      outline: none;
+    }
+    .input-group input:focus, .input-group select:focus {
+      border-color: #3b82f6;
+      background: #ffffff;
+    }
+
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip:active { background: #e2e8f0; transform: scale(0.95); }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CABECERA -->
+  <header class="header">
+    <div class="card clock-card">
+      <button class="fullscreen-btn" onclick="togglePantallaCompleta()" title="Pantalla completa">⛶</button>
+      <div class="clock-time" id="reloj">00:00</div>
+      <div class="clock-date" id="fecha">Cargando fecha...</div>
+    </div>
+
+    <div class="card weather-card">
+      <div class="weather-now">
+        <div class="weather-main-icon" id="clima-icono">☀️</div>
+        <div>
+          <div class="weather-city">El Puig de Santa Maria</div>
+          <div class="weather-temp-main" id="temp-actual">21°</div>
+          <div class="weather-desc" id="clima-desc">Despejado</div>
+        </div>
+      </div>
+      <div class="weather-hours" id="clima-horas"></div>
+    </div>
+  </header>
+
+  <!-- CUERPO PRINCIPAL -->
+  <main class="main-grid">
+    <!-- COLUMNA IZQUIERDA: PRÓXIMA TAREA + FAMILIA -->
+    <section class="left-col">
+      <div class="next-card" id="tarjeta-proximo">
+        <div class="next-info">
+          <div class="next-label" id="prox-persona">PRÓXIMO HOY</div>
+          <div class="next-title" id="prox-titulo">Sin tareas pendientes</div>
+          <div class="next-meta" id="prox-hora">Disfruta del día en familia</div>
+        </div>
+        <div class="next-badge" id="prox-cuenta">Todo al día</div>
+      </div>
+
+      <div class="section-bar">
+        <div class="section-title">📅 Tareas y citas de hoy</div>
+        <button class="btn-primary" onclick="abrirModalTarea()">+ Añadir tarea</button>
+      </div>
+
+      <div class="family-cols" id="columnas-familia"></div>
+    </section>
+
+    <!-- COLUMNA DERECHA: LISTA DE LA COMPRA -->
+    <section class="right-col">
+      <div class="card shop-card">
+        <div class="section-bar">
+          <div class="section-title">🛒 Lista de la compra</div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="shop-badge" id="contador-compra">0 en lista</span>
+            <button class="btn-secondary" id="btn-modo-borrar" onclick="toggleModoBorrar()">🗑️ Borrar</button>
+            <button class="btn-primary" onclick="abrirModalCompra()">+ Añadir</button>
+          </div>
+        </div>
+
+        <div class="shop-grid" id="grid-compra"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL NUEVA TAREA -->
+  <div class="modal-bg" id="modal-tarea">
+    <div class="modal">
+      <h3>✨ Nueva tarea para hoy</h3>
+      <div class="input-group">
+        <label>Asignar a:</label>
+        <select id="tarea-persona">
+          <option value="mama">Mamá</option>
+          <option value="sergio">Sergio</option>
+          <option value="david">David</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Tareas rápidas:</label>
+        <div class="quick-chips">
+          <button type="button" class="chip" onclick="ponerTextoTarea('Sacar el lavavajillas')">🍽️ Sacar lavavajillas</button>
+          <button type="button" class="chip" onclick="ponerTextoTarea('Meter el lavavajillas')">🧼 Meter lavavajillas</button>
+          <button type="button" class="chip" onclick="ponerTextoTarea('Tender la lavadora')">👕 Tender lavadora</button>
+          <button type="button" class="chip" onclick="ponerTextoTarea('Sacar la basura')">🗑️ Sacar basura</button>
+          <button type="button" class="chip" onclick="ponerTextoTarea('Recoger la habitación')">🧸 Recoger habitación</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Descripción:</label>
+        <input type="text" id="tarea-texto" placeholder="Ej. Ir a comprar fruta...">
+      </div>
+      <div class="input-group">
+        <label>Hora prevista:</label>
+        <input type="time" id="tarea-hora" value="18:00">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModales()">Cancelar</button>
+        <button class="btn-primary" onclick="guardarTarea()">Guardar tarea</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NUEVO PRODUCTO -->
+  <div class="modal-bg" id="modal-compra">
+    <div class="modal">
+      <h3>🛒 Añadir a la lista</h3>
+      <div class="input-group">
+        <label>Nombre del producto:</label>
+        <input type="text" id="compra-texto" placeholder="Ej. Tomate frito, Aguacates...">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModales()">Cancelar</button>
+        <button class="btn-primary" onclick="guardarProducto()">Añadir producto</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const FAMILIA = [
+      {
+        id: 'mama',
+        nombre: 'Mamá',
+        color: '#e11d48',
+        gradiente: 'linear-gradient(135deg, #e11d48 0%, #be123c 100%)',
+        fondo: '#fff1f2',
+        borde: '#fecdd3'
+      },
+      {
+        id: 'sergio',
+        nombre: 'Sergio',
+        color: '#2563eb',
+        gradiente: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+        fondo: '#eff6ff',
+        borde: '#bfdbfe'
+      },
+      {
+        id: 'david',
+        nombre: 'David',
+        color: '#059669',
+        gradiente: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+        fondo: '#ecfdf5',
+        borde: '#a7f3d0'
+      }
+    ];
+
+    let modoBorrarCompra = false;
+
+    const estadoInicial = {
+      tareas: [
+        { id: 1, persona: 'sergio', texto: 'Sacar el lavavajillas', hora: '17:30' },
+        { id: 2, persona: 'mama', texto: 'Comprar en el supermercado', hora: '18:30' },
+        { id: 3, persona: 'david', texto: 'Recoger los juguetes', hora: '19:30' }
+      ],
+      compra: [
+        { id: 'leche', nombre: '🥛 Leche', activo: true },
+        { id: 'huevos', nombre: '🥚 Huevos', activo: false },
+        { id: 'pan', nombre: '🥖 Pan', activo: true },
+        { id: 'platanos', nombre: '🍌 Plátanos', activo: false },
+        { id: 'pollo', nombre: '🍗 Pollo', activo: false },
+        { id: 'yogures', nombre: '🍦 Yogures', activo: false },
+        { id: 'queso', nombre: '🧀 Queso', activo: false },
+        { id: 'jamon', nombre: '🥓 Jamón', activo: false },
+        { id: 'tomates', nombre: '🍅 Tomates', activo: false },
+        { id: 'patatas', nombre: '🥔 Patatas', activo: false },
+        { id: 'aceite', nombre: '🫒 Aceite', activo: false },
+        { id: 'arroz', nombre: '🍚 Arroz', activo: false },
+        { id: 'pasta', nombre: '🍝 Pasta', activo: false },
+        { id: 'papel', nombre: '🧻 Papel higiénico', activo: false },
+        { id: 'lavavajillas', nombre: '🧼 Pastillas lavavajillas', activo: false }
+      ]
+    };
+
+    let estado = JSON.parse(localStorage.getItem('dashboard_redmipad_v1')) || estadoInicial;
+
+    function guardarEstado() {
+      localStorage.setItem('dashboard_redmipad_v1', JSON.stringify(estado));
+      renderizarTodo();
+    }
+
+    function togglePantallaCompleta() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // RELOJ Y FECHA
+    function actualizarReloj() {
+      const ahora = new Date();
+      const h = String(ahora.getHours()).padStart(2, '0');
+      const m = String(ahora.getMinutes()).padStart(2, '0');
+      document.getElementById('reloj').textContent = `${h}:${m}`;
+
+      const opciones = { weekday: 'long', day: 'numeric', month: 'long' };
+      document.getElementById('fecha').textContent = ahora.toLocaleDateString('es-ES', opciones);
+      renderizarProximo();
+    }
+
+    // CLIMA EL PUIG DE SANTA MARIA
+    function infoClima(codigo) {
+      if (codigo === 0) return { icono: '☀️', texto: 'Despejado' };
+      if (codigo <= 3) return { icono: '⛅', texto: 'Parcialmente nublado' };
+      if (codigo <= 48) return { icono: '🌫️', texto: 'Niebla' };
+      if (codigo <= 67) return { icono: '🌧️', texto: 'Lluvia' };
+      if (codigo <= 99) return { icono: '⛈️', texto: 'Tormenta' };
+      return { icono: '🌤️', texto: 'Variable' };
+    }
+
+    async function cargarClima() {
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude=39.5889&longitude=-0.3039&current_weather=true&hourly=temperature_2m,precipitation_probability,weathercode&timezone=Europe%2FMadrid';
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const actual = data.current_weather;
+        const info = infoClima(actual.weathercode);
+
+        document.getElementById('clima-icono').textContent = info.icono;
+        document.getElementById('temp-actual').textContent = `${Math.round(actual.temperature)}°`;
+        document.getElementById('clima-desc').textContent = info.texto;
+
+        const horaActual = new Date().getHours();
+        let htmlHoras = '';
+        let count = 0;
+
+        for (let i = 0; i < data.hourly.time.length; i++) {
+          const fechaH = new Date(data.hourly.time[i]);
+          if (fechaH >= new Date() || (fechaH.getDate() === new Date().getDate() && fechaH.getHours() >= horaActual)) {
+            const hStr = `${String(fechaH.getHours()).padStart(2, '0')}:00`;
+            const temp = Math.round(data.hourly.temperature_2m[i]);
+            const prob = data.hourly.precipitation_probability[i] || 0;
+            const ico = infoClima(data.hourly.weathercode[i]).icono;
+
+            htmlHoras += `
+              <div class="hour-item">
+                <span class="hour-time">${hStr}</span>
+                <span class="hour-icon">${ico}</span>
+                <span class="hour-temp">${temp}°</span>
+                <span class="hour-rain">💧${prob}%</span>
+              </div>
+            `;
+            count++;
+            if (count >= 6) break;
+          }
+        }
+        document.getElementById('clima-horas').innerHTML = htmlHoras;
+      } catch (e) {
+        document.getElementById('clima-desc').textContent = 'El Puig de Santa Maria';
+      }
+    }
+
+    // LO PRÓXIMO DE HOY
+    function renderizarProximo() {
+      const tarjeta = document.getElementById('tarjeta-proximo');
+      if (!estado.tareas || estado.tareas.length === 0) {
+        tarjeta.style.background = 'linear-gradient(135deg, #475569 0%, #334155 100%)';
+        document.getElementById('prox-persona').textContent = 'PRÓXIMO HOY';
+        document.getElementById('prox-titulo').textContent = 'Todo completado por hoy';
+        document.getElementById('prox-hora').textContent = 'No quedan tareas pendientes';
+        document.getElementById('prox-cuenta').textContent = '🎉 Libre';
+        return;
+      }
+
+      const ordenadas = [...estado.tareas].sort((a, b) => (a.hora || '23:59').localeCompare(b.hora || '23:59'));
+      const prox = ordenadas[0];
+      const miembro = FAMILIA.find(f => f.id === prox.persona) || FAMILIA[0];
+
+      tarjeta.style.background = miembro.gradiente;
+      document.getElementById('prox-persona').textContent = `PRÓXIMO · ${miembro.nombre.toUpperCase()}`;
+      document.getElementById('prox-titulo').textContent = prox.texto;
+      document.getElementById('prox-hora').textContent = prox.hora ? `Programado para las ${prox.hora}` : 'Para hoy';
+
+      if (prox.hora) {
+        const [h, m] = prox.hora.split(':').map(Number);
+        const ahora = new Date();
+        const fechaTarea = new Date();
+        fechaTarea.setHours(h, m, 0);
+        const diffMin = Math.round((fechaTarea - ahora) / 60000);
+
+        if (diffMin > 60) {
+          document.getElementById('prox-cuenta').textContent = `En ${Math.floor(diffMin / 60)}h ${diffMin % 60}m`;
+        } else if (diffMin > 0) {
+          document.getElementById('prox-cuenta').textContent = `En ${diffMin} min`;
+        } else {
+          document.getElementById('prox-cuenta').textContent = `⏰ ${prox.hora}`;
+        }
+      } else {
+        document.getElementById('prox-cuenta').textContent = 'Hoy';
+      }
+    }
+
+    // COLUMNAS DE FAMILIA (SIN EDADES)
+    function renderizarFamilia() {
+      const contenedor = document.getElementById('columnas-familia');
+      contenedor.innerHTML = FAMILIA.map(p => {
+        const tareasPersona = estado.tareas
+          .filter(t => t.persona === p.id)
+          .sort((a, b) => (a.hora || '23:59').localeCompare(b.hora || '23:59'));
+
+        const tareasHtml = tareasPersona.length === 0
+          ? `<div class="empty-msg"><span>✨</span><span>Todo al día</span></div>`
+          : tareasPersona.map(t => `
+              <div class="task-item" style="background: ${p.fondo}; border-color: ${p.borde}; color: ${p.color}" onclick="completarTarea(${t.id})">
+                ${t.hora ? `<div class="task-time">⏰ ${t.hora}</div>` : ''}
+                <div class="task-text">${t.texto}</div>
+              </div>
+            `).join('');
+
+        return `
+          <div class="card person-col">
+            <div class="person-header">
+              <div class="person-Identity">
+                <span class="person-dot" style="background: ${p.color}"></span>
+                <span class="person-name" style="color: ${p.color}">${p.nombre}</span>
+              </div>
+              <span class="person-count" style="background: ${p.fondo}; color: ${p.color}">${tareasPersona.length}</span>
+            </div>
+            <div class="task-list">${tareasHtml}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function completarTarea(id) {
+      estado.tareas = estado.tareas.filter(t => t.id !== id);
+      guardarEstado();
+    }
+
+    // LISTA DE LA COMPRA
+    function toggleModoBorrar() {
+      modoBorrarCompra = !modoBorrarCompra;
+      const btn = document.getElementById('btn-modo-borrar');
+      btn.classList.toggle('active', modoBorrarCompra);
+      btn.textContent = modoBorrarCompra ? '✓ Listo' : '🗑️ Borrar';
+      renderizarCompra();
+    }
+
+    function renderizarCompra() {
+      const grid = document.getElementById('grid-compra');
+      const activos = estado.compra.filter(i => i.activo).length;
+      document.getElementById('contador-compra').textContent = `${activos} en lista`;
+
+      grid.innerHTML = estado.compra.map(item => {
+        if (modoBorrarCompra) {
+          return `<button class="shop-btn delete-mode" onclick="eliminarProducto('${item.id}')">✕ ${item.nombre}</button>`;
+        }
+        const clase = item.activo ? 'shop-btn active' : 'shop-btn';
+        const icono = item.activo ? '✓ ' : '';
+        return `<button class="${clase}" onclick="toggleCompra('${item.id}')">${icono}${item.nombre}</button>`;
+      }).join('');
+    }
+
+    function toggleCompra(id) {
+      const prod = estado.compra.find(i => i.id === id);
+      if (prod) prod.activo = !prod.activo;
+      guardarEstado();
+    }
+
+    function eliminarProducto(id) {
+      estado.compra = estado.compra.filter(i => i.id !== id);
+      guardarEstado();
+    }
+
+    // MODALES
+    function abrirModalTarea() {
+      document.getElementById('tarea-texto').value = '';
+      document.getElementById('modal-tarea').style.display = 'flex';
+    }
+
+    function ponerTextoTarea(texto) {
+      document.getElementById('tarea-texto').value = texto;
+    }
+
+    function guardarTarea() {
+      const persona = document.getElementById('tarea-persona').value;
+      const texto = document.getElementById('tarea-texto').value.trim();
+      const hora = document.getElementById('tarea-hora').value;
+      if (!texto) return;
+
+      estado.tareas.push({ id: Date.now(), persona, texto, hora });
+      cerrarModales();
+      guardarEstado();
+    }
+
+    function abrirModalCompra() {
+      if (modoBorrarCompra) toggleModoBorrar();
+      document.getElementById('compra-texto').value = '';
+      document.getElementById('modal-compra').style.display = 'flex';
+    }
+
+    function guardarProducto() {
+      const nombre = document.getElementById('compra-texto').value.trim();
+      if (!nombre) return;
+
+      estado.compra.push({ id: 'item_' + Date.now(), nombre, activo: true });
+      cerrarModales();
+      guardarEstado();
+    }
+
+    function cerrarModales() {
+      document.getElementById('modal-tarea').style.display = 'none';
+      document.getElementById('modal-compra').style.display = 'none';
+    }
+
+    function renderizarTodo() {
+      renderizarProximo();
+      renderizarFamilia();
+      renderizarCompra();
+    }
+
+    actualizarReloj();
+    setInterval(actualizarReloj, 10000);
+    cargarClima();
+    setInterval(cargarClima, 1800000);
+    renderizarTodo();
+  </script>
+</body>
+</html>
